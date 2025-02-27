@@ -23,7 +23,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # Import models after db initialization
-from models import Participant, WishlistItem, Drawing, Event
+from models import Participant, WishlistItem, Drawing, Event, EventInvitation
 
 @login_manager.user_loader
 def load_user(id):
@@ -54,6 +54,16 @@ def register():
         participant.set_password(password)
         db.session.add(participant)
         db.session.commit()
+
+        # Check for pending invitations
+        invitations = EventInvitation.query.filter_by(email=email, accepted=False).all()
+        for invitation in invitations:
+            event = Event.query.get(invitation.event_id)
+            if event:
+                event.participants.append(participant)
+                invitation.accepted = True
+        db.session.commit()
+
         flash("Registration successful! Please login.", "success")
         return redirect(url_for("login"))
 
@@ -84,7 +94,8 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    public_events = Event.query.filter_by(is_public=True).all()
+    return render_template("dashboard.html", public_events=public_events)
 
 @app.route("/create_event", methods=["GET", "POST"])
 @login_required
@@ -92,12 +103,13 @@ def create_event():
     if request.method == "POST":
         name = request.form.get("name")
         description = request.form.get("description")
+        is_public = request.form.get("is_public") == "on"
 
         if not name:
             flash("Please provide an event name!", "danger")
             return redirect(url_for("create_event"))
 
-        event = Event(name=name, description=description, creator=current_user)
+        event = Event(name=name, description=description, is_public=is_public, creator=current_user)
         event.participants.append(current_user)  # Add creator as participant
         db.session.add(event)
         db.session.commit()
@@ -106,6 +118,53 @@ def create_event():
         return redirect(url_for("dashboard"))
 
     return render_template("create_event.html")
+
+@app.route("/event/<int:event_id>/invite", methods=["GET", "POST"])
+@login_required
+def invite_participants(event_id):
+    event = Event.query.get_or_404(event_id)
+    if event.creator_id != current_user.id:
+        flash("Only the event creator can send invitations!", "danger")
+        return redirect(url_for("event_dashboard", event_id=event_id))
+
+    if request.method == "POST":
+        emails = request.form.get("emails", "").split()
+        for email in emails:
+            email = email.strip()
+            if email:
+                # Check if user already exists
+                participant = Participant.query.filter_by(email=email).first()
+                if participant:
+                    if participant not in event.participants:
+                        event.participants.append(participant)
+                        flash(f"{email} has been added to the event!", "success")
+                else:
+                    # Create invitation
+                    invitation = EventInvitation(event=event, email=email)
+                    db.session.add(invitation)
+                    flash(f"Invitation sent to {email}!", "success")
+
+        db.session.commit()
+        return redirect(url_for("invite_participants", event_id=event_id))
+
+    return render_template("invite_participants.html", event=event)
+
+@app.route("/event/<int:event_id>/join", methods=["POST"])
+@login_required
+def join_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    if not event.is_public:
+        flash("This event is private!", "danger")
+        return redirect(url_for("dashboard"))
+
+    if current_user in event.participants:
+        flash("You are already a participant in this event!", "warning")
+    else:
+        event.participants.append(current_user)
+        db.session.commit()
+        flash("You have joined the event successfully!", "success")
+
+    return redirect(url_for("dashboard"))
 
 @app.route("/event/<int:event_id>")
 @login_required

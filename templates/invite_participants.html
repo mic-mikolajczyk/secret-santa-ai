@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-success">
+            <div class="card-header bg-success bg-opacity-25">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user-plus"></i> Invite Participants to {{ event.name }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('invite_participants', event_id=event.id) }}">
+                    <div class="mb-3">
+                        <label for="emails" class="form-label">Email Addresses</label>
+                        <textarea class="form-control" id="emails" name="emails" rows="3" placeholder="Enter email addresses, one per line"></textarea>
+                        <div class="form-text">Enter each email address on a new line.</div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-paper-plane"></i> Send Invitations
+                    </button>
+                    <a href="{{ url_for('event_dashboard', event_id=event.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Event
+                    </a>
+                </form>
+
+                <hr>
+
+                <h4>Pending Invitations</h4>
+                {% if event.invitations %}
+                    <ul class="list-group">
+                        {% for invitation in event.invitations %}
+                            <li class="list-group-item">
+                                {{ invitation.email }}
+                                <span class="badge {% if invitation.accepted %}bg-success{% else %}bg-warning{% endif %} float-end">
+                                    {% if invitation.accepted %}Accepted{% else %}Pending{% endif %}
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No pending invitations.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
