@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-info">
+            <div class="card-header bg-info bg-opacity-25">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-list"></i> {{ participant.name }}'s Wishlist
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if participant.wishlist_items %}
+                    <ul class="list-group">
+                        {% for item in participant.wishlist_items %}
+                            <li class="list-group-item">{{ item.description }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No items in their wishlist yet!</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
