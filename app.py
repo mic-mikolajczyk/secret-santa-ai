@@ -23,7 +23,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # Import models after db initialization
-from models import Participant, WishlistItem
+from models import Participant, WishlistItem, Drawing
 
 @login_manager.user_loader
 def load_user(id):
@@ -133,6 +133,7 @@ def view_wishlist(participant_id):
     participant = Participant.query.get_or_404(participant_id)
     return render_template("view_wishlist.html", participant=participant)
 
-# Create tables
+# Drop all tables and recreate them
 with app.app_context():
+    db.drop_all()
     db.create_all()
