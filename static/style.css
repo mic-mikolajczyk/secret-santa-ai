@@ -1,0 +1,47 @@
+/* Custom Christmas theme colors */
+:root {
+    --christmas-red: #dc3545;
+    --christmas-green: #198754;
+}
+
+/* Festive animations */
+@keyframes shake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.fa-gift {
+    animation: shake 2s infinite;
+    display: inline-block;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Custom spacing and typography */
+.display-4 {
+    font-weight: 700;
+}
+
+.lead {
+    font-size: 1.4rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    .lead {
+        font-size: 1.2rem;
+    }
+}
