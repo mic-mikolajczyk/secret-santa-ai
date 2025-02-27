@@ -12,8 +12,8 @@
             </div>
             <div class="card-body">
                 <p>{{ event.description }}</p>
-                
-                {% if current_user.has_drawn %}
+
+                {% if drawing %}
                     <div class="alert alert-success">
                         <h5><i class="fas fa-gift"></i> Your Secret Santa Assignment</h5>
                         <p>You are giving a gift to: <strong>{{ drawing.receiver.name }}</strong></p>

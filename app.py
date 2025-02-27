@@ -1,5 +1,6 @@
 import os
 import random
+import hashlib
 from flask import Flask, render_template, request, flash, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
@@ -24,6 +25,11 @@ login_manager.login_view = 'login'
 
 # Import models after db initialization
 from models import Participant, WishlistItem, Drawing, Event, EventInvitation
+
+def get_gravatar_url(email, size=100):
+    """Generate Gravatar URL for a given email"""
+    email_hash = hashlib.md5(email.lower().encode('utf-8')).hexdigest()
+    return f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d=identicon"
 
 @login_manager.user_loader
 def load_user(id):
@@ -52,6 +58,7 @@ def register():
 
         participant = Participant(name=name, email=email)
         participant.set_password(password)
+        participant.avatar_url = get_gravatar_url(email)  # Set avatar URL
         db.session.add(participant)
         db.session.commit()
 
@@ -103,13 +110,20 @@ def create_event():
     if request.method == "POST":
         name = request.form.get("name")
         description = request.form.get("description")
+        budget = request.form.get("budget", type=float)
         is_public = request.form.get("is_public") == "on"
 
         if not name:
             flash("Please provide an event name!", "danger")
             return redirect(url_for("create_event"))
 
-        event = Event(name=name, description=description, is_public=is_public, creator=current_user)
+        event = Event(
+            name=name,
+            description=description,
+            budget=budget,
+            is_public=is_public,
+            creator=current_user
+        )
         event.participants.append(current_user)  # Add creator as participant
         db.session.add(event)
         db.session.commit()

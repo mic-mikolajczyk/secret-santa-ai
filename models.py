@@ -9,6 +9,7 @@ class Participant(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))
     has_drawn = db.Column(db.Boolean, default=False)
+    avatar_url = db.Column(db.String(200))  # Added avatar URL field
 
     # Events created by this participant
     created_events = db.relationship('Event', backref='creator', lazy=True)
@@ -31,6 +32,7 @@ class Event(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     is_public = db.Column(db.Boolean, default=False)
+    budget = db.Column(db.Float)  # Added budget field
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     creator_id = db.Column(db.Integer, db.ForeignKey('participant.id'), nullable=False)
 
