@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info bg-opacity-25">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt"></i> {{ event.name }}
+                </h3>
+                <p class="text-muted mb-0">Created by {{ event.creator.name }}</p>
+            </div>
+            <div class="card-body">
+                <p>{{ event.description }}</p>
+                
+                {% if current_user.has_drawn %}
+                    <div class="alert alert-success">
+                        <h5><i class="fas fa-gift"></i> Your Secret Santa Assignment</h5>
+                        <p>You are giving a gift to: <strong>{{ drawing.receiver.name }}</strong></p>
+                        <a href="{{ url_for('view_wishlist', event_id=event.id, participant_id=drawing.receiver.id) }}" class="btn btn-info">
+                            <i class="fas fa-list"></i> View Their Wishlist
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-random"></i> Draw Names</h5>
+                        <p>You haven't drawn a name yet!</p>
+                        <a href="{{ url_for('draw', event_id=event.id) }}" class="btn btn-success">
+                            <i class="fas fa-random"></i> Draw a Name
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-header bg-success bg-opacity-25">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-users"></i> Participants
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if event.participants %}
+                    <ul class="list-group">
+                        {% for participant in event.participants %}
+                            <li class="list-group-item">
+                                {{ participant.name }}
+                                {% if participant.has_drawn %}
+                                    <span class="badge bg-success float-end">Drawn</span>
+                                {% else %}
+                                    <span class="badge bg-warning float-end">Pending</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No participants yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-info">
+            <div class="card-header bg-info bg-opacity-25">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-list"></i> Your Wishlist
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_wishlist_item', event_id=event.id) }}" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="description" placeholder="Add wishlist item..." required>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </form>
+
+                {% if wishlist_items %}
+                    <ul class="list-group">
+                        {% for item in wishlist_items %}
+                            <li class="list-group-item">
+                                {{ item.description }}
+                                <small class="text-muted">Added: {{ item.created_at.strftime('%Y-%m-%d') }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">Your wishlist is empty.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %}

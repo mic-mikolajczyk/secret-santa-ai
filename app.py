@@ -23,7 +23,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # Import models after db initialization
-from models import Participant, WishlistItem, Drawing
+from models import Participant, WishlistItem, Drawing, Event
 
 @login_manager.user_loader
 def load_user(id):
@@ -86,52 +86,137 @@ def logout():
 def dashboard():
     return render_template("dashboard.html")
 
-@app.route("/draw")
+@app.route("/create_event", methods=["GET", "POST"])
 @login_required
-def draw():
-    if current_user.has_drawn:
-        flash("You have already drawn a name!", "warning")
+def create_event():
+    if request.method == "POST":
+        name = request.form.get("name")
+        description = request.form.get("description")
+
+        if not name:
+            flash("Please provide an event name!", "danger")
+            return redirect(url_for("create_event"))
+
+        event = Event(name=name, description=description, creator=current_user)
+        event.participants.append(current_user)  # Add creator as participant
+        db.session.add(event)
+        db.session.commit()
+
+        flash("Event created successfully!", "success")
         return redirect(url_for("dashboard"))
 
-    # Get all participants except current user who haven't been drawn
-    available = Participant.query.filter(
-        Participant.id != current_user.id,
-        ~Participant.id.in_(
-            db.session.query(Participant.giving_to_id).filter(Participant.giving_to_id != None)
-        )
-    ).all()
+    return render_template("create_event.html")
+
+@app.route("/event/<int:event_id>")
+@login_required
+def event_dashboard(event_id):
+    event = Event.query.get_or_404(event_id)
+    if current_user not in event.participants:
+        flash("You are not a participant in this event!", "danger")
+        return redirect(url_for("dashboard"))
+
+    drawing = Drawing.query.filter_by(event_id=event.id, giver_id=current_user.id).first()
+    wishlist_items = WishlistItem.query.filter_by(
+        event_id=event.id,
+        participant_id=current_user.id
+    ).order_by(WishlistItem.created_at.desc()).all()
+
+    return render_template("event_dashboard.html",
+                         event=event,
+                         drawing=drawing,
+                         wishlist_items=wishlist_items)
+
+@app.route("/event/<int:event_id>/draw")
+@login_required
+def draw(event_id):
+    event = Event.query.get_or_404(event_id)
+    if current_user not in event.participants:
+        flash("You are not a participant in this event!", "danger")
+        return redirect(url_for("dashboard"))
+
+    if Drawing.query.filter_by(event_id=event.id, giver_id=current_user.id).first():
+        flash("You have already drawn a name!", "warning")
+        return redirect(url_for("event_dashboard", event_id=event.id))
+
+    # Get all participants except current user who haven't been drawn in this event
+    available = [p for p in event.participants 
+                if p != current_user and 
+                not Drawing.query.filter_by(event_id=event.id, receiver_id=p.id).first()]
 
     if not available:
         flash("No available participants to draw!", "warning")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("event_dashboard", event_id=event.id))
 
     drawn = random.choice(available)
-    current_user.giving_to = drawn
-    current_user.has_drawn = True
+    drawing = Drawing(event_id=event.id, giver=current_user, receiver=drawn)
+    db.session.add(drawing)
     db.session.commit()
 
     flash(f"You will be giving a gift to {drawn.name}!", "success")
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("event_dashboard", event_id=event.id))
 
-@app.route("/wishlist", methods=["GET", "POST"])
+@app.route("/event/<int:event_id>/wishlist", methods=["POST"])
 @login_required
-def wishlist():
-    if request.method == "POST":
-        description = request.form.get("description")
-        if description:
-            item = WishlistItem(description=description, participant=current_user)
-            db.session.add(item)
-            db.session.commit()
-            flash("Wishlist item added!", "success")
-        return redirect(url_for("wishlist"))
+def add_wishlist_item(event_id):
+    event = Event.query.get_or_404(event_id)
+    if current_user not in event.participants:
+        flash("You are not a participant in this event!", "danger")
+        return redirect(url_for("dashboard"))
 
-    return render_template("wishlist.html")
+    description = request.form.get("description")
+    if description:
+        item = WishlistItem(
+            description=description,
+            participant=current_user,
+            event_id=event_id
+        )
+        db.session.add(item)
+        db.session.commit()
+        flash("Wishlist item added!", "success")
 
-@app.route("/wishlist/<int:participant_id>")
+    return redirect(url_for("event_dashboard", event_id=event_id))
+
+@app.route("/event/<int:event_id>/wishlist/<int:participant_id>")
 @login_required
-def view_wishlist(participant_id):
+def view_wishlist(event_id, participant_id):
+    event = Event.query.get_or_404(event_id)
     participant = Participant.query.get_or_404(participant_id)
-    return render_template("view_wishlist.html", participant=participant)
+    if current_user not in event.participants:
+        flash("You are not a participant in this event!", "danger")
+        return redirect(url_for("dashboard"))
+
+    drawing = Drawing.query.filter_by(
+        event_id=event.id,
+        giver_id=current_user.id,
+        receiver_id=participant_id
+    ).first()
+
+    if not drawing:
+        flash("You can only view the wishlist of the person you're giving a gift to!", "danger")
+        return redirect(url_for("event_dashboard", event_id=event_id))
+
+    wishlist_items = WishlistItem.query.filter_by(
+        event_id=event.id,
+        participant_id=participant_id
+    ).order_by(WishlistItem.created_at.desc()).all()
+
+    return render_template("view_wishlist.html",
+                         event=event,
+                         participant=participant,
+                         wishlist_items=wishlist_items)
+
+@app.route("/event/<int:event_id>/delete", methods=["POST"])
+@login_required
+def delete_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    if event.creator_id != current_user.id:
+        flash("You can only delete events you created!", "danger")
+        return redirect(url_for("dashboard"))
+
+    db.session.delete(event)
+    db.session.commit()
+    flash("Event deleted successfully!", "success")
+    return redirect(url_for("dashboard"))
 
 # Drop all tables and recreate them
 with app.app_context():
