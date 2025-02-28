@@ -296,6 +296,20 @@ def view_wishlist(event_id, participant_id):
                            wishlist_items=wishlist_items)
 
 
+@app.route("/event/<int:event_id>/wishlist/<int:item_id>/delete", methods=["POST"])
+@login_required
+def delete_wishlist_item(event_id, item_id):
+    item = WishlistItem.query.get_or_404(item_id)
+    if current_user != item.participant:
+        flash("You can only delete your own wishlist items!", "danger")
+        return redirect(url_for("event_dashboard", event_id=event_id))
+
+    db.session.delete(item)
+    db.session.commit()
+    flash("Wishlist item deleted!", "success")
+    return redirect(url_for("event_dashboard", event_id=event_id))
+
+
 @app.route("/event/<int:event_id>/delete", methods=["POST"])
 @login_required
 def delete_event(event_id):
