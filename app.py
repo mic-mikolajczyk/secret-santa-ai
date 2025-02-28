@@ -119,6 +119,7 @@ def create_event():
         description = request.form.get("description")
         budget = request.form.get("budget", type=float)
         is_public = request.form.get("is_public") == "on"
+        currency = request.form.get("currency")
 
         if not name:
             flash("Please provide an event name!", "danger")
@@ -129,6 +130,7 @@ def create_event():
             description=description,
             budget=budget,
             is_public=is_public,
+            currency=currency,
             creator=current_user
         )
         event.participants.append(current_user)  # Add creator as participant

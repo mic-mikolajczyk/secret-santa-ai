@@ -42,6 +42,7 @@ class Event(db.Model):
     description = db.Column(db.Text)
     is_public = db.Column(db.Boolean, default=False)
     budget = db.Column(db.Float)
+    currency = db.Column(db.String(3), nullable=False, default='USD')  # Added currency field
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     creator_id = db.Column(
         db.Integer,
