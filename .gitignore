@@ -1,0 +1,55 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+venv-lnx/
+.venv/
+.venv-lnx/
+env/
+.env
+env.bak/
+
+# IDE specific files
+.idea/
+.vscode/
+
+# Compiled Python files
+*.pyc
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+test-coverage.xml
+test-results.xml
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# mkdocs documentation
+/site
+
+# Secret files
+*.crt
+*.pem
+*.key
