@@ -276,16 +276,6 @@ def view_wishlist(event_id, participant_id):
         flash("You are not a participant in this event!", "danger")
         return redirect(url_for("dashboard"))
 
-    drawing = Drawing.query.filter_by(
-        event_id=event.id,
-        giver_id=current_user.id,
-        receiver_id=participant_id
-    ).first()
-
-    if not drawing:
-        flash("You can only view the wishlist of the person you're giving a gift to!", "danger")
-        return redirect(url_for("event_dashboard", event_id=event.id))
-
     wishlist_items = WishlistItem.query.filter_by(
         event_id=event.id,
         participant_id=participant_id
