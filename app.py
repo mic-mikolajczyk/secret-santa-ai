@@ -27,7 +27,7 @@ login_manager.login_view = 'login'
 def get_gravatar_url(email, size=100):
     """Generate Gravatar URL for a given email"""
     email_hash = hashlib.md5(email.lower().encode('utf-8')).hexdigest()
-    return f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d=identicon"
+    return f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d=retro"
 
 
 @login_manager.user_loader
@@ -88,6 +88,7 @@ def login():
 
         if participant and participant.check_password(password):
             login_user(participant)
+            participant.avatar_url = get_gravatar_url(email)  # Set avatar URL
             flash("Welcome back!", "success")
             return redirect(url_for("dashboard"))
         flash("Invalid email or password", "danger")
@@ -283,7 +284,7 @@ def view_wishlist(event_id, participant_id):
 
     if not drawing:
         flash("You can only view the wishlist of the person you're giving a gift to!", "danger")
-        return redirect(url_for("event_dashboard", event_id=event_id))
+        return redirect(url_for("event_dashboard", event_id=event.id))
 
     wishlist_items = WishlistItem.query.filter_by(
         event_id=event.id,

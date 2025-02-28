@@ -46,6 +46,7 @@
                     <ul class="list-group">
                         {% for participant in event.participants %}
                             <li class="list-group-item">
+                                <img src="{{ participant.avatar_url }}" alt="{{ participant.name }}" class="rounded-circle me-2" width="30" height="30">
                                 {{ participant.name }}
                                 {% if participant.has_drawn %}
                                     <span class="badge bg-success float-end">Drawn</span>
