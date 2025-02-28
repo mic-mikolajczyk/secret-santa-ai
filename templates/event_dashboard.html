@@ -9,6 +9,11 @@
                     <i class="fas fa-calendar-alt"></i> {{ event.name }}
                 </h3>
                 <p class="text-muted mb-0">Created by {{ event.creator.name }}</p>
+                {% if current_user.id == event.creator.id %}
+                    <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-warning btn-sm float-end">
+                        <i class="fas fa-edit"></i> Edit Event
+                    </a>
+                {% endif %}
             </div>
             <div class="card-body">
                 <p>{{ event.description }}</p>

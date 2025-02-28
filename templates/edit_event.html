@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card border-warning">
+            <div class="card-header bg-warning bg-opacity-25">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> Edit Event
+                </h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('edit_event', event_id=event.id) }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Event Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ event.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ event.description }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="budget" class="form-label">Budget per Person</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="budget" name="budget" min="0" step="0.01" value="{{ event.budget }}" required>
+                            <select class="form-select" id="currency" name="currency" required>
+                                <option value="USD" {% if event.currency == 'USD' %}selected{% endif %}>USD</option>
+                                <option value="EUR" {% if event.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                                <option value="GBP" {% if event.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                                <option value="CHF" {% if event.currency == 'CHF' %}selected{% endif %}>CHF</option>
+                                <option value="PLN" {% if event.currency == 'PLN' %}selected{% endif %}>PLN</option>
+                            </select>
+                        </div>
+                        <div class="form-text">Set the suggested budget amount per person.</div>
+                    </div>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <a href="{{ url_for('event_dashboard', event_id=event.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -353,6 +353,27 @@ def remove_participant(event_id, participant_id):
     return redirect(url_for("event_dashboard", event_id=event_id))
 
 
+@app.route("/event/<int:event_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_event(event_id):
+    event = Event.query.get_or_404(event_id)
+    if current_user.id != event.creator_id:
+        flash("Only the event creator can edit this event!", "danger")
+        return redirect(url_for("event_dashboard", event_id=event_id))
+
+    if request.method == "POST":
+        event.name = request.form.get("name")
+        event.description = request.form.get("description")
+        event.budget = request.form.get("budget", type=float)
+        event.currency = request.form.get("currency")
+
+        db.session.commit()
+        flash("Event updated successfully!", "success")
+        return redirect(url_for("event_dashboard", event_id=event_id))
+
+    return render_template("edit_event.html", event=event)
+
+
 # Drop all tables and recreate them
 with app.app_context():
     db.drop_all()
