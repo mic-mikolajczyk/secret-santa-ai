@@ -16,12 +16,18 @@ class Participant(UserMixin, db.Model):
     created_events = db.relationship('Event', backref='creator', lazy=True)
 
     # Events this participant is part of (many-to-many)
-    events = db.relationship('Event', secondary='event_participants',
-                             backref=db.backref('participants', lazy=True))
+    events = db.relationship(
+        'Event',
+        secondary='event_participants',
+        backref=db.backref('participants', lazy=True)
+    )
 
     # Wishlist items for this participant
     wishlist_items = db.relationship(
-        'WishlistItem', backref='participant', lazy=True)
+        'WishlistItem',
+        backref='participant',
+        lazy=True
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -35,10 +41,12 @@ class Event(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     is_public = db.Column(db.Boolean, default=False)
-    budget = db.Column(db.Float)  # Added budget field
+    budget = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    creator_id = db.Column(db.Integer, db.ForeignKey(
-        'participant.id'), nullable=False)
+    creator_id = db.Column(
+        db.Integer,
+        db.ForeignKey('participant.id'), nullable=False
+    )
 
     # Drawings for this event
     drawings = db.relationship('Drawing', backref='event', lazy=True)
@@ -49,12 +57,13 @@ class Event(db.Model):
 
 
 # Association table for Event-Participant many-to-many relationship
-event_participants = db.Table('event_participants',
-                              db.Column('event_id', db.Integer, db.ForeignKey(
-                                  'event.id'), primary_key=True),
-                              db.Column('participant_id', db.Integer, db.ForeignKey(
-                                  'participant.id'), primary_key=True)
-                              )
+event_participants = db.Table(
+    'event_participants',
+    db.Column('event_id', db.Integer, db.ForeignKey(
+        'event.id'), primary_key=True),
+    db.Column('participant_id', db.Integer, db.ForeignKey(
+        'participant.id'), primary_key=True)
+)
 
 
 class EventInvitation(db.Model):

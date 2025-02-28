@@ -315,6 +315,42 @@ def delete_event(event_id):
     return redirect(url_for("dashboard"))
 
 
+@app.route("/event/<int:event_id>/remove/<int:participant_id>", methods=["POST"])
+@login_required
+def remove_participant(event_id, participant_id):
+    event = Event.query.get_or_404(event_id)
+    participant = Participant.query.get_or_404(participant_id)
+
+    if current_user.id != event.creator_id:
+        flash("Only the event creator can remove participants!", "danger")
+        return redirect(url_for("event_dashboard", event_id=event_id))
+
+    if participant not in event.participants:
+        flash("Participant not found in this event!", "danger")
+        return redirect(url_for("event_dashboard", event_id=event_id))
+
+    # Remove participant from event
+    event.participants.remove(participant)
+
+    # Handle drawings
+    drawing_as_giver = Drawing.query.filter_by(event_id=event.id, giver_id=participant.id).first()
+    drawing_as_receiver = Drawing.query.filter_by(event_id=event.id, receiver_id=participant.id).first()
+
+    if drawing_as_giver:
+        db.session.delete(drawing_as_giver)
+
+    if drawing_as_receiver:
+        db.session.delete(drawing_as_receiver)
+        # Allow the giver to draw a new name
+        giver = Participant.query.get(drawing_as_receiver.giver_id)
+        if giver:
+            giver.has_drawn = False
+
+    db.session.commit()
+    flash("Participant removed from the event!", "success")
+    return redirect(url_for("event_dashboard", event_id=event_id))
+
+
 # Drop all tables and recreate them
 with app.app_context():
     db.drop_all()
