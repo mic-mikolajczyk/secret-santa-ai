@@ -17,7 +17,7 @@
             </div>
             <div class="card-body">
                 <p>{{ event.description }}</p>
-                <p><strong>Budget per Person:</strong> ${{ event.budget }}</p>
+                <p><strong>Budget per Person:</strong> {{ event.budget }} {{ event.currency }}</p>
 
                 {% if drawing %}
                     <div class="alert alert-success">
