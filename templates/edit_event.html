@@ -33,6 +33,10 @@
                         </div>
                         <div class="form-text">Set the suggested budget amount per person.</div>
                     </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="can_draw" name="can_draw" {% if event.can_draw %}checked{% endif %}>
+                        <label class="form-check-label" for="can_draw">Allow drawing names</label>
+                    </div>
                     <button type="submit" class="btn btn-warning">
                         <i class="fas fa-save"></i> Save Changes
                     </button>

@@ -48,6 +48,7 @@ class Event(db.Model):
         db.Integer,
         db.ForeignKey('participant.id'), nullable=False
     )
+    can_draw = db.Column(db.Boolean, default=False)  # Add this line
 
     # Drawings for this event
     drawings = db.relationship('Drawing', backref='event', lazy=True)
