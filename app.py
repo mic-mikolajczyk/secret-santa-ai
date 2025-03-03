@@ -120,6 +120,7 @@ def create_event():
         budget = request.form.get("budget", type=float)
         is_public = request.form.get("is_public") == "on"
         currency = request.form.get("currency")
+        can_draw = request.form.get("can_draw") == "on"
 
         if not name:
             flash("Please provide an event name!", "danger")
@@ -131,7 +132,8 @@ def create_event():
             budget=budget,
             is_public=is_public,
             currency=currency,
-            creator=current_user
+            creator=current_user,
+            can_draw=can_draw
         )
         event.participants.append(current_user)  # Add creator as participant
         db.session.add(event)
@@ -220,6 +222,10 @@ def draw(event_id):
     if current_user not in event.participants:
         flash("You are not a participant in this event!", "danger")
         return redirect(url_for("dashboard"))
+
+    if not event.can_draw:
+        flash("Drawing names is not allowed for this event yet!", "warning")
+        return redirect(url_for("event_dashboard", event_id=event.id))
 
     if Drawing.query.filter_by(event_id=event.id, giver_id=current_user.id).first():
         flash("You have already drawn a name!", "warning")
@@ -366,6 +372,7 @@ def edit_event(event_id):
         event.description = request.form.get("description")
         event.budget = request.form.get("budget", type=float)
         event.currency = request.form.get("currency")
+        event.can_draw = request.form.get("can_draw") == "on"
 
         db.session.commit()
         flash("Event updated successfully!", "success")
